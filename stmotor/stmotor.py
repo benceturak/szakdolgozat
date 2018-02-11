@@ -14,8 +14,14 @@ class StMotor(object):
         GPIO.setup(self.__GPIOpins[2], GPIO.OUT)
         GPIO.setup(self.__GPIOpins[3], GPIO.OUT)
 
-        self.__halfSteps = halfSteps
+        self.halfSteps = halfSteps
 
+    @halfSteps.setter
+    def halpSteps(self, halpSteps):
+        if isinstance(halfSteps, bool):
+            self.__halfSteps = halfSteps
+        else:
+            raise TypeError()
 
     def stepForward(self):
         if self.__halfSteps:
