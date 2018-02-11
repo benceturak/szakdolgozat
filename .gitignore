@@ -1,2 +1,9 @@
 #ftp config file
 .ftpconfig
+
+#test files
+motor.py
+proba.py
+
+#images
+*.jpg
