@@ -19,7 +19,7 @@ class StMotor(object):
             self.__halfSteps = halfSteps
         else:
             raise TypeError()
-        if isinstance(speed, int):
+        if isinstance(speed, (int, float)) and speed >= 1:
             self.__speed = speed * 0.003
         else:
             raise TypeError()
@@ -34,10 +34,26 @@ class StMotor(object):
 
         GPIO.output(self.__GPIOpins[0][0], 1)
         self.turn2(10)
+        self.turn2(-10)
         self.__position = 0
     @property
     def position(self):
         return self.__position
+    @position.setter
+    def position(self, pos):
+        if isinstance(pos, int):
+            self.__position = pos
+        else:
+            raise TypeError()
+    @property
+    def speed(self):
+        return self.__speed / 0.003
+    @speed.setter
+    def speed(self, speed):
+        if isinstance(speed, (int, float)) and speed >= 1:
+            self.__speed = speed * 0.003
+        else:
+            raise TypeError()
     @property
     def halfSteps(self):
         return self.__halfSteps
@@ -59,8 +75,6 @@ class StMotor(object):
                     self.stepForward()
                 elif pos < 0:
                     self.stepBackward()
-                print(self.__position)
-
         elif turnMode == STMOTOR_TURN_ABS:
             self.turn2(pos - self.__position)
         else:
