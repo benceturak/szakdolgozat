@@ -1,42 +1,40 @@
-
-import RPi.GPIO as GPIO
+import itertools
 import time
+import RPi.GPIO as GPIO
+
+#contants
+
+#turn mode:
+STMOTOR_TURN_ABS = 0
+STMOTOR_TURN_REL = 1
+
+
 
 class StMotor(object):
 
-    def __init__(self, GPIOmode, GPIOpins, halfSteps = False):
-
+    def __init__(self, GPIOmode, GPIOpins, speed = 1, halfSteps = False):
+        #set default position
+        self.__position = 0
+        if isinstance(halfSteps, bool):
+            self.__halfSteps = halfSteps
+        else:
+            raise TypeError()
+        if isinstance(speed, int):
+            self.__speed = speed * 0.003
+        else:
+            raise TypeError()
         #set GPIO
         GPIO.setmode(GPIOmode)
 
-        self.__GPIOpins = [[GPIOpins[0], 0],[GPIOpins[1], 0],[GPIOpins[2], 0],[GPIOpins[3], 0]]
-
+        self.__GPIOpins = [[GPIOpins[0], 1],[GPIOpins[1], 0],[GPIOpins[2], 0],[GPIOpins[3], 0]]
         GPIO.setup(self.__GPIOpins[0], GPIO.OUT)
         GPIO.setup(self.__GPIOpins[1], GPIO.OUT)
         GPIO.setup(self.__GPIOpins[2], GPIO.OUT)
         GPIO.setup(self.__GPIOpins[3], GPIO.OUT)
 
-        if isinstance(halfSteps, bool):
-            self.__halfSteps = halfSteps
-        else:
-            raise TypeError()
-
-        print(self.__GPIOpins)
         GPIO.output(self.__GPIOpins[0][0], 1)
-        self.__GPIOpins[0][1] = 1
-        print(self.__GPIOpins)
-        time.sleep(0.005)
-        self.stepForward()
-        print(self.__GPIOpins)
-        time.sleep(0.005)
-        self.stepForward()
-        print(self.__GPIOpins)
-        time.sleep(0.005)
-        self.stepForward()
-        print(self.__GPIOpins)
-
+        self.turn2(10)
         self.__position = 0
-
     @property
     def position(self):
         return self.__position
@@ -52,7 +50,23 @@ class StMotor(object):
     @property
     def GPIOpins(self):
         return self.__GPIOpins
+    def turn2(self, pos, turnMode = STMOTOR_TURN_REL):
+        if not isinstance(pos, int):
+            raise TypeError
+        if turnMode == STMOTOR_TURN_REL:
+            for _ in  range(abs(pos)):
+                if pos > 0:
+                    self.stepForward()
+                elif pos < 0:
+                    self.stepBackward()
+                print(self.__position)
+
+        elif turnMode == STMOTOR_TURN_ABS:
+            self.turn2(pos - self.__position)
+        else:
+            raise TypeError
     def stepForward(self):
+        time.sleep(self.__speed)
         if self.__halfSteps:
             for pin in range(0, 4):
                 if self.__GPIOpins[pin][1] == 1:
@@ -82,8 +96,9 @@ class StMotor(object):
                         GPIO.output(self.__GPIOpins[pin + 1][0], 1)
                         self.__GPIOpins[pin + 1][1] = 1
                     break
-        self.__poisition +=1
+        self.__position += 1
     def stepBackward(self):
+        time.sleep(self.__speed)
         if self.__halfSteps:
             for pin in range(0, 4):
                 if self.__GPIOpins[pin][1] == 1:
