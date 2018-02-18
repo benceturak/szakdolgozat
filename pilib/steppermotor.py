@@ -10,7 +10,7 @@ STMOTOR_TURN_REL = 1
 
 
 
-class StMotor(object):
+class StepperMotor(object):
 
     def __init__(self, GPIOmode, GPIOpins, speed = 1, halfSteps = False):
         #set default position
@@ -111,6 +111,7 @@ class StMotor(object):
                         self.__GPIOpins[pin + 1][1] = 1
                     break
         self.__position += 1
+        print(self.__GPIOpins)
     def stepBackward(self):
         time.sleep(self.__speed)
         if self.__halfSteps:
