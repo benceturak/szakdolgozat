@@ -9,8 +9,8 @@ from steppermotorunit import StepperMotorUnit
 class GPIOStepperMotorUnit(StepperMotorUnit):
     '''Class for stepper motor unit across RPi GPIO port
 
-        :param GPIOmode: type of GPIO pins number, (GPIO.BOARD|GPIO.BCM)
-        :param GPIOpins: number of pins (tuple)
+        :param GPIOmode: type of GPIO pins ID (GPIO.BOARD|GPIO.BCM)
+        :param GPIOpins: ID of pins (tuple)
     '''
 
     def __init__(self, GPIOmode, GPIOpins):
@@ -20,33 +20,26 @@ class GPIOStepperMotorUnit(StepperMotorUnit):
         GPIO.setmode(GPIOmode)
 
         if isinstance(GPIOpins, tuple):
-            self.__GPIOpins = [[GPIOpins[0], 1],[GPIOpins[1], 0],[GPIOpins[2], 0],[GPIOpins[3], 0]]
+            self.__magnets = [[GPIOpins[0], 0],[GPIOpins[1], 0],[GPIOpins[2], 0],[GPIOpins[3], 0]]
             GPIO.setup(self.__GPIOpins[0], GPIO.OUT)
             GPIO.setup(self.__GPIOpins[1], GPIO.OUT)
             GPIO.setup(self.__GPIOpins[2], GPIO.OUT)
             GPIO.setup(self.__GPIOpins[3], GPIO.OUT)
-    @property
-    def GPIOpins(self):
-        '''getter method for GPIO pins
+    def getMagnetStatus(self, magnetNum):
+        '''getter method for just one magnet
 
-            :returns: GPIO pins number as setted up GPIO mode and pins values
+            :param magnetNum: order number of magnet (int) 0-3
+            :returns: status of magnet
         '''
-        return self.__GPIOpins
-    def getGPIOpin(self, pin):
-        '''getter method for just one GPIO pins
+        return self.__magnets[magnetNum][1]
+    def setMagnetStatus(self, magnetNum, output):
+        '''setter method for magnet status
 
-            :param pin: order number of pin (int) 0-3
-            :returns: value of pin
+            :param magnetNum: order number of magnet (int) 0-3
+            :param output: status of magnet (int or boolean) 1|0 ot True|False
         '''
-        return self.__GPIOpins[pin][1]
-    def setGPIOpin(self, pin, output):
-        '''set GPIO pins output method
-
-            :param pin: order number of pin (int) 0-3
-            :param outpur: value of pin (int or boolean) 1|0 ot True|False
-        '''
-        GPIO.output(self.__GPIOpins[pin][0], output)
-        self.__GPIOpins[pin][1] = output
+        GPIO.output(self.__magnets[megnetNum][0], output)
+        self.__GPIOpins[megnetNum][1] = output
     def __del__(self):
         '''destruktor
         '''
