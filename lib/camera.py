@@ -5,7 +5,6 @@ try:
 except:
     pass
 
-
 class Camera(object):
     ''' Class for handle difference camera unit
 
@@ -21,7 +20,7 @@ class Camera(object):
             if isinstance(cameraUnit, picamera.Picamera):
                 self.__cameraUnit = cameraUnit
         finally:
-            pass
+            pass#presently only PiCamera is availanly
 
         if isinstance(camCalibParams, (CamCalibParams, None)):#check camera calibration parameters
             self.__camCalibParams = camCalibParams
@@ -53,7 +52,7 @@ class Camera(object):
             if isinstance(self.__cameraUnit, picamera.Picamera):
                 self.__cameraUnit.capture(name)
         finally:
-            pass
+            pass#presently only PiCamera is availanly
     def startCameraView(self):
         '''Start Camera View method
         '''
@@ -61,7 +60,7 @@ class Camera(object):
             if isinstance(self.__cameraUnit, picamera.Picamera):
                 self.__cameraUnit.start_preview()
         finally:
-            pass
+            pass#presently only PiCamera is availanly
     def stopCameraView(self):
         '''Stop Camera View method
         '''
@@ -69,4 +68,4 @@ class Camera(object):
             if isinstance(self.__cameraUnit, picamera.Picamera):
                 self.__cameraUnit.stop_preview()
         finally:
-            pass
+            pass#presently only PiCamera is availanly

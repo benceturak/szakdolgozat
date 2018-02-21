@@ -1,6 +1,5 @@
 import itertools
 import time
-import RPi.GPIO as GPIO
 
 #contants
 
@@ -11,8 +10,11 @@ STMOTOR_TURN_REL = 1
 
 
 class StepperMotor(object):
+    '''Class for handle difference stepper motor cameraUnit
 
-    def __init__(self, GPIOmode, GPIOpins, speed = 1, halfSteps = False):
+        :param stepperMotorUnit: stepper motor unit (StepperMotorUnit)
+    '''
+    def __init__(self, stepperMotorUnit, speed = 1, halfSteps = False):
         #set default position
         self.__position = 0
         if isinstance(halfSteps, bool):
