@@ -19,7 +19,7 @@ class StepperMotor(object):
         '''
         #set stepperMotorUnit
         if isinstance(stepperMotorUnit, lib.steppermotorunit.StepperMotorUnit):
-            self.__unit = stepperMotorUnit
+            self.__stepperMotorUnit = stepperMotorUnit
         else:
             raise TypeError()
         #set default position
@@ -113,25 +113,25 @@ class StepperMotor(object):
         time.sleep(self.__speed)
         if self.__halfSteps:
             for m in range(0, 4):
-                if self.__unit.getMagnetStatus(m) == 1:
-                    if m == 0 and self.__unit.getMagnetStatus(3) == 1:
-                        self.__unit.setMagnetStatus(3, 0)
+                if self.__stepperMotorUnit.getMagnetStatus(m) == 1:
+                    if m == 0 and self.__stepperMotorUnit.getMagnetStatus(3) == 1:
+                        self.__stepperMotorUnit.setMagnetStatus(3, 0)
                     elif m == 3:
-                        self.__unit.setMagnetStatus(0, 1)
+                        self.__stepperMotorUnit.setMagnetStatus(0, 1)
                     else:
-                        if self.__unit.getMagnetStatus(m + 1) == 1:
-                            self.__unit.setMagnetStatus(m, 0)
+                        if self.__stepperMotorUnit.getMagnetStatus(m + 1) == 1:
+                            self.__stepperMotorUnit.setMagnetStatus(m, 0)
                         else:
-                            self.__unit.setMagnetStatus(m + 1, 1)
+                            self.__stepperMotorUnit.setMagnetStatus(m + 1, 1)
                     break
         else:
             for m in range(0, 4):
-                if self.__unit.getMagnetStatus(m) == 1:
-                    self.__unit.setMagnetStatus(m, 0)
+                if self.__stepperMotorUnit.getMagnetStatus(m) == 1:
+                    self.__stepperMotorUnit.setMagnetStatus(m, 0)
                     if m == 3:
-                        self.__unit.setMagnetStatus(0, 1)
+                        self.__stepperMotorUnit.setMagnetStatus(0, 1)
                     else:
-                        self.__unit.setMagnetStatus(m + 1, 1)
+                        self.__stepperMotorUnit.setMagnetStatus(m + 1, 1)
                     break
         self.__position += 1
     def stepBackward(self):
@@ -140,29 +140,29 @@ class StepperMotor(object):
         time.sleep(self.__speed)
         if self.__halfSteps:
             for m in range(0, 4):
-                if self.__unit.getMagnetStatus(m) == 1:
-                    if m == 0 and self.__unit.getMagnetStatus(3) == 1:
-                        self.__unit.setMagnetStatus(0, 0)
+                if self.__stepperMotorUnit.getMagnetStatus(m) == 1:
+                    if m == 0 and self.__stepperMotorUnit.getMagnetStatus(3) == 1:
+                        self.__stepperMotorUnit.setMagnetStatus(0, 0)
                     elif m == 3:
-                        self.__unit.setMagnetStatus(m - 1, 1)
+                        self.__stepperMotorUnit.setMagnetStatus(m - 1, 1)
                     else:
-                        if self.__unit.getMagnetStatus(m + 1) == 1:
-                            self.__unit.setMagnetStatus(m + 1, 0)
+                        if self.__stepperMotorUnit.getMagnetStatus(m + 1) == 1:
+                            self.__stepperMotorUnit.setMagnetStatus(m + 1, 0)
                         else:
-                            self.__unit.setMagnetStatus(m - 1, 1)
+                            self.__stepperMotorUnit.setMagnetStatus(m - 1, 1)
                     break
         else:
             for m in range(0, 4):
-                if self.__unit.getMagnetStatus(m) == 1:
-                    self.__unit.setMagnetStatus(m, 0)
+                if self.__stepperMotorUnit.getMagnetStatus(m) == 1:
+                    self.__stepperMotorUnit.setMagnetStatus(m, 0)
                     if m == 0:
-                        self.__unit.setMagnetStatus(3, 1)
+                        self.__stepperMotorUnit.setMagnetStatus(3, 1)
                     else:
-                        self.__unit.setMagnetStatus(m - 1, 1)
+                        self.__stepperMotorUnit.setMagnetStatus(m - 1, 1)
                     break
         self.__position -= 1
 
     def __del__(self):
         '''destructor
         '''
-        del self.__unit
+        del self.__stepperMotorUnit
