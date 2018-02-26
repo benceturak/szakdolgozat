@@ -8,7 +8,6 @@ STMOTOR_TURN_ABS = 0
 STMOTOR_TURN_REL = 1
 
 
-
 class StepperMotor(object):
     '''Class for handle difference stepper motor cameraUnit
 
@@ -32,10 +31,11 @@ class StepperMotor(object):
             self.__speed = speed * 0.003
         else:
             raise TypeError()
-
+        #initialize of motor
         self.turnTo(10)
         self.turnTo(-10)
         self.__position = 0
+        print('A')
     @property
     def position(self):
         '''getter method for position

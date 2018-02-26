@@ -1,5 +1,6 @@
 import os
 import cv2
+from camcalibparams import CamCalibParams
 try:
     import picamera
 except:
@@ -17,12 +18,12 @@ class Camera(object):
         '''
         #check camera unit type
         try:
-            if isinstance(cameraUnit, picamera.Picamera):
+            if isinstance(cameraUnit, picamera.PiCamera):
                 self.__cameraUnit = cameraUnit
         finally:
             pass#presently only PiCamera is availanly
 
-        if isinstance(camCalibParams, (CamCalibParams, None)):#check camera calibration parameters
+        if isinstance(camCalibParams, CamCalibParams) or camCalibParams == None:#check camera calibration parameters
             self.__camCalibParams = camCalibParams
         else:
             raise TypeError('camCalibParams must be CamCalibParams object or None')

@@ -1,14 +1,15 @@
-from lib.camcalibparams import CamCalibParams
-import glob
+from lib.camerastation import CameraStation
+from lib.gpiosteppermotorunit import GPIOStepperMotorUnit
+from lib.camera import Camera
+import picamera
+import RPi.GPIO as GPIO
 
-images = glob.glob('calib_images/*')
+pins = (18, 23, 24, 25)
 
-print(images)
+motorUnit = GPIOStepperMotorUnit(GPIO.BCM, pins)
 
-params = CamCalibParams().load('bbb')
+camera = picamera.PiCamera()
 
+motor = GPIOStepperMotorUnit(GPIO.BCM, pins)
 
-
-#params.findChessboardCorners(images)
-#params.calibrate()
-#params.save('bbb')
+station = CameraStation(camera, motor)

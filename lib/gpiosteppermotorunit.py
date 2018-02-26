@@ -15,7 +15,6 @@ class GPIOStepperMotorUnit(lib.steppermotorunit.StepperMotorUnit):
         '''
         #set GPIO
         GPIO.setmode(GPIOmode)
-        print('b')
 
         if isinstance(GPIOpins, tuple):
             self.__magnets = [[GPIOpins[0], 1],[GPIOpins[1], 0],[GPIOpins[2], 0],[GPIOpins[3], 0]]

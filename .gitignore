@@ -6,6 +6,8 @@ ulyxes
 #test files
 motor.py
 proba.py
+contrast.py
+
 
 #images
 *.jpg
