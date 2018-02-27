@@ -17,12 +17,12 @@ class GPIOStepperMotorUnit(lib.steppermotorunit.StepperMotorUnit):
         GPIO.setmode(GPIOmode)
 
         if isinstance(GPIOpins, tuple):
-            self.__magnets = [[GPIOpins[0], 1],[GPIOpins[1], 0],[GPIOpins[2], 0],[GPIOpins[3], 0]]
-            GPIO.setup(self.__magnets[0], GPIO.OUT)
-            GPIO.setup(self.__magnets[1], GPIO.OUT)
-            GPIO.setup(self.__magnets[2], GPIO.OUT)
-            GPIO.setup(self.__magnets[3], GPIO.OUT)
-            GPIO.output(self.__magnets[0][0], 1)
+            self._magnets = [[GPIOpins[0], 1],[GPIOpins[1], 0],[GPIOpins[2], 0],[GPIOpins[3], 0]]
+            GPIO.setup(self._magnets[0], GPIO.OUT)
+            GPIO.setup(self._magnets[1], GPIO.OUT)
+            GPIO.setup(self._magnets[2], GPIO.OUT)
+            GPIO.setup(self._magnets[3], GPIO.OUT)
+            GPIO.output(self._magnets[0][0], 1)
         else:
             raise TypeError('GPIOpins must be tuple!')
     def getMagnetStatus(self, magnetNum):
@@ -31,15 +31,15 @@ class GPIOStepperMotorUnit(lib.steppermotorunit.StepperMotorUnit):
             :param magnetNum: order number of magnet (int) 0-3
             :returns: status of magnet (int) 0|1
         '''
-        return self.__magnets[magnetNum][1]
+        return self._magnets[magnetNum][1]
     def setMagnetStatus(self, magnetNum, output):
         '''setter method for magnet status
 
             :param magnetNum: order number of magnet (int) 0-3
             :param output: status of magnet (int or boolean) 1|0 ot True|False
         '''
-        GPIO.output(self.__magnets[magnetNum][0], output)
-        self.__magnets[magnetNum][1] = output
+        GPIO.output(self._magnets[magnetNum][0], output)
+        self._magnets[magnetNum][1] = output
     def __del__(self):
         '''destruktor
         '''

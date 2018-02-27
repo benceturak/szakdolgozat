@@ -17,12 +17,12 @@ FOCUS_CLOSER = 1
 FOCUS_FARTHER = 1
 
 
-class CameraStation(TotalStation, Camera, StepperMotor):
+class CameraStation(StepperMotor):
     #, name, measureUnit, measureIface     , writerUnit = None
     def __init__(self, cameraUnit, stepperMotorUnit, camCalibParams = None, speed = 1, halfSteps = False, affinParams = None, useImageCorrection = False):
         #TotalSatation().__init__(self, name, measureUnit, measureIface, writerUnit) cemmented fr tests
-        Camera.__init__(self, cameraUnit, camCalibParams)
-        StepperMotor.__init__(self, stepperMotorUnit, speed, halfSteps)
+        #super().__init__(self, cameraUnit, camCalibParams)
+        #super().__init__(self, stepperMotorUnit, speed, halfSteps)
 
         print(self.__position)
 

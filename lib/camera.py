@@ -19,12 +19,12 @@ class Camera(object):
         #check camera unit type
         try:
             if isinstance(cameraUnit, picamera.PiCamera):
-                self.__cameraUnit = cameraUnit
+                self._cameraUnit = cameraUnit
         finally:
             pass#presently only PiCamera is availanly
 
         if isinstance(camCalibParams, CamCalibParams) or camCalibParams == None:#check camera calibration parameters
-            self.__camCalibParams = camCalibParams
+            self._camCalibParams = camCalibParams
         else:
             raise TypeError('camCalibParams must be CamCalibParams object or None')
     @property
@@ -33,7 +33,7 @@ class Camera(object):
 
             :returns: camera calibration parameters
         '''
-        return self.__camCalibParams
+        return self._camCalibParams
     @camCalibParams.setter
     def camCalibParams(self, camCalParams):
         '''setter method for camera calibration parameters
@@ -41,7 +41,7 @@ class Camera(object):
             :param camCalParms: camera calibration parameters
         '''
         if isinstance(camCalibParams, (CamCalibParams, None)):
-            self.__camCalibParams = camCalibParams
+            self._camCalibParams = camCalibParams
         else:
             raise TypeError('camCalibParams must be CamCalibParams object or None')
     def takePhoto(self, name):
@@ -50,23 +50,23 @@ class Camera(object):
             :param name: name of image file
         '''
         try:
-            if isinstance(self.__cameraUnit, picamera.Picamera):
-                self.__cameraUnit.capture(name)
+            if isinstance(self._cameraUnit, picamera.Picamera):
+                self._cameraUnit.capture(name)
         finally:
             pass#presently only PiCamera is availanly
     def startCameraView(self):
         '''Start Camera View method
         '''
         try:
-            if isinstance(self.__cameraUnit, picamera.Picamera):
-                self.__cameraUnit.start_preview()
+            if isinstance(self._cameraUnit, picamera.Picamera):
+                self._cameraUnit.start_preview()
         finally:
             pass#presently only PiCamera is availanly
     def stopCameraView(self):
         '''Stop Camera View method
         '''
         try:
-            if isinstance(self.__cameraUnit, picamera.Picamera):
-                self.__cameraUnit.stop_preview()
+            if isinstance(self._cameraUnit, picamera.Picamera):
+                self._cameraUnit.stop_preview()
         finally:
             pass#presently only PiCamera is availanly
