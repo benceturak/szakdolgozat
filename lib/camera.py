@@ -50,7 +50,7 @@ class Camera(object):
             :param name: name of image file
         '''
         try:
-            if isinstance(self._cameraUnit, picamera.Picamera):
+            if isinstance(self._cameraUnit, picamera.PiCamera):
                 self._cameraUnit.capture(name)
         finally:
             pass#presently only PiCamera is availanly

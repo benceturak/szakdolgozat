@@ -37,7 +37,6 @@ class StepperMotor(object):
         self.turnTo(10)
         self.turnTo(-10)
         self._position = 0
-        print('A')
     @property
     def position(self):
         '''getter method for position

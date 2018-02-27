@@ -13,3 +13,7 @@ camera = picamera.PiCamera()
 motor = GPIOStepperMotorUnit(GPIO.BCM, pins)
 
 station = CameraStation(camera, motor)
+
+station.autoFocus()
+
+del station
