@@ -7,16 +7,16 @@ from camera import Camera
 from camcalibparams import CamCalibParams
 from steppermotor import StepperMotor
 from picamera import PiCamera
+from imgprocess import ImgProcess
 import numpy as np
 import os
 
 
 import cv2
 
-#constants
 
-FOCUS_CLOSER = 1
-FOCUS_FARTHER = 2
+
+
 
 
 class CameraStation(TotalStation, Camera, StepperMotor):
@@ -24,9 +24,23 @@ class CameraStation(TotalStation, Camera, StepperMotor):
 
         :param name:
         :param measureUnit:
+        :param measureIface:
+        :param cameraUnit:
+        :param stepperMotorUnit:
+        :param writerUnit:
+        :param speed:
+        :param halfSteps:
+        :param affinParams:
+        :param useImageCorrection:
     '''
+    #constants
+    FOCUS_CLOSER = 1
+    FOCUS_FARTHER = 2
+
     #, name, measureUnit, measureIface     , writerUnit = None
-    def __init__(self, cameraUnit, stepperMotorUnit, camCalibParams = None, speed = 1, halfSteps = False, affinParams = None, useImageCorrection = False):
+    def __init__(self, cameraUnit, stepperMotorUnit, camCalibParams = None, speed = 1, halfSteps = False, affinParams = np.empty((2,2), int), useImageCorrection = False):
+        '''constructor
+        '''
         #TotalSatation.__init__(self, name, measureUnit, measureIface, writerUnit) cemmented fr tests
         Camera.__init__(self, cameraUnit, camCalibParams)
         StepperMotor.__init__(self, stepperMotorUnit, speed, halfSteps)
@@ -35,13 +49,9 @@ class CameraStation(TotalStation, Camera, StepperMotor):
         self._affinParams = affinParams
 
         self._useImageCorrection = useImageCorrection
-
-
-
         #initialize of focus
 
-        contrast = {'ID': 0 , 'pos': self._position, 'contrast': -1}
-        self._contrasts = [contrast]#[ID, motorPosition, contarst value(-1 is special initial value)]
+        self._contrasts = [{'pos': self._position, 'contrast': -1}]
 
 
     def getContrast(self, mask = None):
@@ -56,7 +66,6 @@ class CameraStation(TotalStation, Camera, StepperMotor):
         mean, dev = None, None
         if mask == None:
             size = gray.shape
-
             mask = np.zeros(gray.shape, dtype='uint8')
             cv2.rectangle(mask, (int(size[0]/2) - 25, int(size[1]/2) - 25), (int(size[0]/2) + 25, int(size[1]/2) + 25), 255, -1)
 
@@ -70,35 +79,84 @@ class CameraStation(TotalStation, Camera, StepperMotor):
         '''
         while True:
             contrast = {}
-            if direction == FOCUS_FARTHER:
+            if direction == self.FOCUS_FARTHER:
                 #print(self._contrasts[-1]['contrast'])
 
                 self.turnTo(20)
-                contrast['ID'] = self._contrasts[-1]['ID'] + 1
                 contrast['pos'] = self._position
                 contrast['contrast'] = self.getContrast()
 
                 #print(contrast['contrast'])
 
                 if contrast['contrast'] < self._contrasts[-1]['contrast']:
-                    direction = FOCUS_CLOSER
-            elif direction == FOCUS_CLOSER:
+                    direction = self.FOCUS_CLOSER
+            elif direction == self.FOCUS_CLOSER:
                 #print(self._contrasts[-1]['contrast'])
 
                 self.turnTo(-20)
-                contrast['ID'] = self._contrasts[-1]['ID'] + 1
                 contrast['pos'] = self._position
                 contrast['contrast'] = self.getContrast()
 
                 #print(contrast['contrast'])
 
                 if contrast['contrast'] > self._contrasts[-1]['contrast']:
-                    direction = FOCUS_FARTHER
+                    direction = self.FOCUS_FARTHER
 
             self._contrasts.append(contrast)
-            print(abs(self._contrasts[-2]['contrast'] - self._contrasts[-1]['contrast']))
+            #print(abs(self._contrasts[-2]['contrast'] - self._contrasts[-1]['contrast']))
 
             if abs(self._contrasts[-2]['contrast'] - self._contrasts[-1]['contrast']) < 0.1:
-                print('aaaaaaaaaaaaaa')
                 print(abs(contrast['contrast'] - self._contrasts[-1]['contrast']))
-                break
+                #break
+    def affinCalibration(self):
+        '''determine the affin transformation parameters
+
+        '''
+
+        picNum = 0
+
+        picName = 'affin_calib/affin_calib_' + str(self._position) + '_' + str(picNum) + '.png'
+
+        while True:
+            print('Target on the marker!')
+            self.takePhoto(picName)
+
+
+            answer = input("Do you want to ")
+
+    def _picMeasure(self, numOfTargets = 1, checkPic = True,  savePic = True):
+        picName =
+        self.takePhoto(picName)
+
+        img = ImgProcess(picName)
+
+        targets = img.findTargets()
+
+        if checkPic:
+            check = cv2.circle(img.img,(int(x), int(y)), 10, (0,0,255), 1)
+            cv2.imshow('check', check)
+
+
+        if targets.shape[0] > numOfTargets:
+            print 'Warning! More targets are found!'
+        else:
+
+
+
+
+
+
+
+
+
+
+
+
+
+        return x, y
+
+
+    def targetOn(self):
+        '''target on method
+        '''
+        pass

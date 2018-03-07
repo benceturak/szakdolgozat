@@ -14,6 +14,8 @@ motor = GPIOStepperMotorUnit(GPIO.BCM, pins)
 
 station = CameraStation(camera, motor)
 
+station.startCameraView()
+
 station.autoFocus()
 
 del station

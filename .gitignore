@@ -9,7 +9,9 @@ proba.py
 contrast.py
 pp.py
 ppp.py
-
+test.py
+lib/recognition.py
+lib/__pycache__
 
 #images
 *.jpg

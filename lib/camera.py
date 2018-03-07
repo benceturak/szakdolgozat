@@ -21,7 +21,7 @@ class Camera(object):
             if isinstance(cameraUnit, picamera.PiCamera):
                 self._cameraUnit = cameraUnit
         finally:
-            pass#presently only PiCamera is availanly
+            pass#presently only PiCamera is available
 
         if isinstance(camCalibParams, CamCalibParams) or camCalibParams == None:#check camera calibration parameters
             self._camCalibParams = camCalibParams
@@ -53,20 +53,20 @@ class Camera(object):
             if isinstance(self._cameraUnit, picamera.PiCamera):
                 self._cameraUnit.capture(name)
         finally:
-            pass#presently only PiCamera is availanly
+            pass#presently only PiCamera is available
     def startCameraView(self):
         '''Start Camera View method
         '''
         try:
-            if isinstance(self._cameraUnit, picamera.Picamera):
+            if isinstance(self._cameraUnit, picamera.PiCamera):
                 self._cameraUnit.start_preview()
         finally:
-            pass#presently only PiCamera is availanly
+            pass#presently only PiCamera is available
     def stopCameraView(self):
         '''Stop Camera View method
         '''
         try:
-            if isinstance(self._cameraUnit, picamera.Picamera):
+            if isinstance(self._cameraUnit, picamera.PiCamera):
                 self._cameraUnit.stop_preview()
         finally:
-            pass#presently only PiCamera is availanly
+            pass#presently only PiCamera is available
