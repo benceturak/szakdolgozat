@@ -10,13 +10,7 @@ from picamera import PiCamera
 from imgprocess import ImgProcess
 import numpy as np
 import os
-
-
 import cv2
-
-
-
-
 
 
 class CameraStation(TotalStation, Camera, StepperMotor):
@@ -37,11 +31,11 @@ class CameraStation(TotalStation, Camera, StepperMotor):
     FOCUS_CLOSER = 1
     FOCUS_FARTHER = 2
 
-    #, name, measureUnit, measureIface     , writerUnit = None
-    def __init__(self, cameraUnit, stepperMotorUnit, camCalibParams = None, speed = 1, halfSteps = False, affinParams = np.empty((2,2), int), useImageCorrection = False):
+    #
+    def __init__(self, name, measureUnit, measureIface, cameraUnit, stepperMotorUnit, writerUnit = None, camCalibParams = None, speed = 1, halfSteps = False, affinParams = np.empty((2,2), int), useImageCorrection = False):
         '''constructor
         '''
-        #TotalSatation.__init__(self, name, measureUnit, measureIface, writerUnit) cemmented fr tests
+        TotalStation.__init__(self, name, measureUnit, measureIface, writerUnit)
         Camera.__init__(self, cameraUnit, camCalibParams)
         StepperMotor.__init__(self, stepperMotorUnit, speed, halfSteps)
 
@@ -125,7 +119,7 @@ class CameraStation(TotalStation, Camera, StepperMotor):
             answer = input("Do you want to ")
 
     def _picMeasure(self, numOfTargets = 1, checkPic = True,  savePic = True):
-        picName =
+        picName = ''
         self.takePhoto(picName)
 
         img = ImgProcess(picName)
@@ -138,21 +132,9 @@ class CameraStation(TotalStation, Camera, StepperMotor):
 
 
         if targets.shape[0] > numOfTargets:
-            print 'Warning! More targets are found!'
+            print('Warning! More targets are found!')
         else:
-
-
-
-
-
-
-
-
-
-
-
-
-
+            pass
         return x, y
 
 
@@ -160,3 +142,8 @@ class CameraStation(TotalStation, Camera, StepperMotor):
         '''target on method
         '''
         pass
+
+    def __del__(self):
+        '''destructor
+        '''
+        StepperMotor.__del__(self)

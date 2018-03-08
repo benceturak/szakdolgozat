@@ -1,6 +1,6 @@
 import itertools
 import time
-import lib.steppermotorunit
+from steppermotorunit import StepperMotorUnit
 #contants
 
 #turn mode:
@@ -19,7 +19,7 @@ class StepperMotor(object):
         '''constructor
         '''
         #set stepperMotorUnit
-        if isinstance(stepperMotorUnit, lib.steppermotorunit.StepperMotorUnit):
+        if isinstance(stepperMotorUnit, StepperMotorUnit):
             self._stepperMotorUnit = stepperMotorUnit
         else:
             raise TypeError()
@@ -166,4 +166,4 @@ class StepperMotor(object):
     def __del__(self):
         '''destructor
         '''
-        del self._stepperMotorUnit
+        self._stepperMotorUnit.__del__()

@@ -22,8 +22,8 @@ class Camera(object):
                 self._cameraUnit = cameraUnit
         finally:
             pass#presently only PiCamera is available
-
-        if isinstance(camCalibParams, CamCalibParams) or camCalibParams == None:#check camera calibration parameters
+        print(camCalibParams)
+        if isinstance(camCalibParams, (CamCalibParams)) or camCalibParams == None:#check camera calibration parameters
             self._camCalibParams = camCalibParams
         else:
             raise TypeError('camCalibParams must be CamCalibParams object or None')

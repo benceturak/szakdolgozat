@@ -1,9 +1,9 @@
 import itertools
 import time
 import RPi.GPIO as GPIO
-import lib.steppermotorunit
+from steppermotorunit import StepperMotorUnit
 
-class GPIOStepperMotorUnit(lib.steppermotorunit.StepperMotorUnit):
+class GPIOStepperMotorUnit(StepperMotorUnit):
     '''Class for stepper motor unit across RPi GPIO port
 
         :param GPIOmode: type of GPIO pins ID (GPIO.BOARD|GPIO.BCM)

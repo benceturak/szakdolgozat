@@ -58,7 +58,7 @@ class ImgProcess(object):
 
         if isinstance(src, str):
             self._src = src
-            self.img = cv2.imread(src)
+            self.img = cv2.imread(src, 1)
         else:
             raise TypeError('Src must be string!')
 
@@ -109,7 +109,7 @@ class ImgProcess(object):
         return targets
 
         #cv2.imwrite('lines.png', result)
-    
+
     def view(self):
         cv2.imshow(self._src ,self.img)
     def check(self, targets):
