@@ -1,11 +1,22 @@
-import pilib.piserver
+import sys
+sys.path.append('pyapi')
+sys.path.append('lib')
+from totalstationrequesthandler import TotalStationRequestHandler
+
 import socketserver
 import threading
+
+class StationServer(socketserver.TCPServer):
+    def __init__(self, server_address, RequestHandlerClass):
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
+        self.stations = []
 
 if __name__ == "__main__":
 
 
-    server = pilib.piserver.ServerThread(('192.168.0.50', 8081), pilib.piserver.PiHandler)
+    server = StationServer(('192.168.0.50', 8081), TotalStationRequestHandler)
 
-    thread = threading.Thread(target=server.serve_forever)
-    thread.start()
+    server.serve_forever()
+
+    #thread = threading.Thread(target=server.serve_forever)
+    #thread.start()
