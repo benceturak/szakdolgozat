@@ -56,7 +56,7 @@ class TCPIface(Iface):
 
         ans = b''
         try:
-            ans = self.sock.recv(1024)
+            ans = self.sock.recv(self.bufSize)
             print(ans)
         except:
             self.state = self.IF_READ
@@ -109,6 +109,7 @@ class TCPIface(Iface):
                 res += self.GetLine() + b"|"
         if res.endswith(b"|"):
             res = res[:-1]
+        res = res.decode('ascii')
         return res
 
 if __name__ == "__main__":
