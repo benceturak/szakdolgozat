@@ -1,32 +1,29 @@
+import sys
+sys.path.append('../ulyxes/pyapi/')
 import os
 import cv2
+from instrument import Instrument
 from camcalibparams import CamCalibParams
+from tcpiface import TCPIface
+
 try:
     import picamera
 except:
     pass
 
-class Camera(object):
+class Camera(Instrument):
     ''' Class for handle difference camera unit
 
         :param cameraUnit: camera unit (PiCamera)
         :param camCalibParams: camera calibration parameters, optional
     '''
 
-    def __init__(self, cameraUnit, camCalibParams = None):
+    def __init__(self, name, measureUnit, measureIface = None, writerUnit = None):
         '''contructor
         '''
-        #check camera unit type
-        try:
-            if isinstance(cameraUnit, picamera.PiCamera):
-                self._cameraUnit = cameraUnit
-        finally:
-            pass#presently only PiCamera is available
-        print(camCalibParams)
-        if isinstance(camCalibParams, (CamCalibParams)) or camCalibParams == None:#check camera calibration parameters
-            self._camCalibParams = camCalibParams
-        else:
-            raise TypeError('camCalibParams must be CamCalibParams object or None')
+        super(Camera, self).__init__(name, measureUnit, measureIface, writerUnit)
+
+        self.measureUnit = measureUnit
     @property
     def camCalibParams(self):
         '''Getter method for camera calibration parameters
@@ -44,29 +41,47 @@ class Camera(object):
             self._camCalibParams = camCalibParams
         else:
             raise TypeError('camCalibParams must be CamCalibParams object or None')
-    def takePhoto(self, name):
+    def TakePhoto(self, pic, file=False):
         '''taking photo method
 
             :param name: name of image file
         '''
-        try:
-            if isinstance(self._cameraUnit, picamera.PiCamera):
-                self._cameraUnit.capture(name)
-        finally:
-            pass#presently only PiCamera is available
-    def startCameraView(self):
+        print('bbbb')
+        msg = self.measureUnit.TakePhotoMsg(pic, file)
+        if isinstance(msg, str):
+            return self._process(msg)
+        else:
+            return msg
+    def StartCameraView(self):
         '''Start Camera View method
         '''
-        try:
-            if isinstance(self._cameraUnit, picamera.PiCamera):
-                self._cameraUnit.start_preview()
-        finally:
-            pass#presently only PiCamera is available
-    def stopCameraView(self):
+        msg = self.measureUnit.StartCameraViewMsg()
+
+        if msg['ret'] != 0:
+            return self._process(msg)
+        else:
+            return msg['ret']
+
+    def StopCameraView(self):
         '''Stop Camera View method
         '''
-        try:
-            if isinstance(self._cameraUnit, picamera.PiCamera):
-                self._cameraUnit.stop_preview()
-        finally:
-            pass#presently only PiCamera is available
+
+        msg = self.measureUnit.StopCameraViewMsg()
+
+        if msg['ret'] != 0:
+            return self._process(msg)
+        else:
+            return msg['ret']
+
+    def GetContrast(self, mask = None):
+        '''take picture and get contarst
+
+            :returns: contrast of taken picture
+        '''
+
+        msg = self.measureUnit.GetContrastMsg(mask)
+
+        if msg['ret'] != 0:
+            return self._process(msg)
+        else:
+            return msg['contrast']
