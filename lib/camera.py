@@ -41,15 +41,14 @@ class Camera(Instrument):
             self._camCalibParams = camCalibParams
         else:
             raise TypeError('camCalibParams must be CamCalibParams object or None')
-    def TakePhoto(self, pic, file=False):
+    def TakePhoto(self, pic, resolution = (480,720)):
         '''taking photo method
 
             :param name: name of image file
         '''
-        print('bbbb')
-        msg = self.measureUnit.TakePhotoMsg(pic, file)
+        msg = self.measureUnit.TakePhotoMsg(pic, resolution)
         if isinstance(msg, str):
-            return self._process(msg)
+            return self._process(msg, pic)
         else:
             return msg
     def StartCameraView(self):

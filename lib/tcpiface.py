@@ -44,7 +44,7 @@ class TCPIface(Iface):
         except:
             self.state = self.IF_ERROR
             logging.error(" cannot close TCP socet")
-    def GetLine(self):
+    def GetLine(self, bufSize = None):
         """ read from TCP interface until end of line
 
         :returns: line read from TCP (str) or empty string on timeout or error, state is set also
@@ -55,20 +55,35 @@ class TCPIface(Iface):
         # read answer till end of line
 
         ans = b''
+        a = b''
         try:
-            ans = self.sock.recv(self.bufSize)
-            print(ans)
-        except:
-            self.state = self.IF_READ
+            if bufSize != None:
+
+                a = self.sock.recv(1024)
+                ans += a
+                while sys.getsizeof(ans) < bufSize + 17:
+                    l = sys.getsizeof(ans)
+                    a = self.sock.recv(1024)
+                    ans += a
+            else:
+                a = self.sock.recv(1)
+                ans += a
+                while a != b'\n':
+                    a = self.sock.recv(1)
+                    ans += a
+
+        except Exception as e:
+            #self.state = self.IF_READ
             logging.error(" cannot read TCP socket")
         if ans == b'':
             # timeout exit loop
-            self.state = self.IF_TIMEOUT
+            #self.state = self.IF_TIMEOUT
             logging.error(" timeout on TCP socket")
         # remove end of line
         logging.debug(" message got: %s", ans)
         ans = ans.strip(b'\n')
         return ans
+
     def PutLine(self, msg):
         """ send message through the TCP socket
 
@@ -88,7 +103,7 @@ class TCPIface(Iface):
         # send message to serial interface
         logging.debug(" message sent: %s", msg)
         try:
-            self.sock.sendall(msg)
+            self.sock.send(msg)
         except:
             self.state = self.IF_WRITE
             logging.error(" cannot write serial line")

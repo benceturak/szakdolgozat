@@ -1,20 +1,22 @@
 import sys
-sys.path.append('pyapi')
+sys.path.append('ulyxes/pyapi')
 sys.path.append('lib')
 from totalstationrequesthandler import TotalStationRequestHandler
+from leicatps1200 import LeicaTPS1200
+from serialiface import SerialIface
 
-import socketserver
+import SocketServer
 import threading
 
-class StationServer(socketserver.TCPServer):
-    def __init__(self, server_address, RequestHandlerClass):
-        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass)
-        self.stations = []
 
 if __name__ == "__main__":
 
+    #iface = SerialIface('test', '/dev/ttyUSB0')
 
-    server = StationServer(('192.168.0.50', 8081), TotalStationRequestHandler)
+    #mu = LeicaTPS1200()
+
+
+    server = SocketServer.TCPServer(('192.168.1.102', 8081), TotalStationRequestHandler)
 
     server.serve_forever()
 

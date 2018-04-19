@@ -6,6 +6,8 @@ from measureunit import MeasureUnit
 from angle import Angle
 import logging
 import json
+import io
+import os
 
 
 class RemoteMeasureUnit(MeasureUnit):
@@ -50,6 +52,8 @@ class RemoteMeasureUnit(MeasureUnit):
         'GETSPIRAL': 9040,
         'SETSPIRAL': 9041,
         'SEARCHTARGET': 17020,
+        'TAKEPHOTO': 501,
+        'GETCONTRAST': 502,
         'TRIAL': -1
     }
 
@@ -71,117 +75,175 @@ class RemoteMeasureUnit(MeasureUnit):
             :returns: dictionary
         """
         msgList = re.split('\|', msgs)
-        ansList = re.split('\|', anss)
-        res = {}
-        for msg, ans in zip(msgList, ansList):
-            # get command id form message
-            msgBufflist = json.loads(msg)
+        if isinstance(anss, str):
+            ansList = re.split('\|', anss)
+            res = {}
+            for msg, ans in zip(msgList, ansList):
+                # get command id form message
+                msgBufflist = json.loads(msg)
 
-            # get error code from answer
-            ansBufflist = json.loads(ans)
-            try:
-                errCode = int(ansBufflist['err'])
+                # get error code from answer
+                ansBufflist = json.loads(ans)
+                try:
+                    errCode = int(ansBufflist['err'])
 
-                params = ansBufflist['params']
-                for key, val in params.items():
-                    res[key] = eval(val)
-            except ValueError:
-                errCode = -1   # invalid answer
-            except IndexError:
-                errCode = -2   # instrument off?
-            if errCode != 0:
-                logging.error(" error from instrument: %d", errCode)
-                res['errorCode'] = errCode
-                #if not errCode in (1283, 1284, 1285, 1288): # do not stop if accuracy is not perfect
-        return res
+                    params = ansBufflist['params']
+                    for key, val in params.items():
+                        if not isinstance(val, io.BytesIO):
+                            res[key] = eval(val)
+                        else:
+                            res[key] = val
+                except ValueError:
+                    errCode = -1   # invalid answer
+                except IndexError:
+                    errCode = -2   # instrument off?
+                if errCode != 0:
+                    logging.error(" error from instrument: %d", errCode)
+                    res['errorCode'] = errCode
+                    #if not errCode in (1283, 1284, 1285, 1288): # do not stop if accuracy is not perfect
+            return res
+        else:
+            return anss
     @staticmethod
     def execCmd(ts, msg):
 
         print(b'---------')
+        print(msg)
         msgBufflist = json.loads(msg.decode('ascii'))
 
         cmd = msgBufflist['cmd']
         params = msgBufflist['params']
         print(params)
+        res = {'params': None, 'err': None}
+        file = None
+        #try:
+        res['err'] = 0
+        if cmd == RemoteMeasureUnit.codes['GETMEASURE']:
+            res['params'] = ts.GetMeasure(params['wait'], params['incl'])
+        elif cmd == RemoteMeasureUnit.codes['MEASUREANGDIST']:
+            res['params'] = ts.MeasureDistAngMsg(params['prg'])
+        elif cmd == RemoteMeasureUnit.codes['GETPC']:
+            res['params'] = ts.GetPc(params['prg'])
+        elif cmd == RemoteMeasureUnit.codes['GETPT']:
+            res['params'] = ts.GetPrismType()
+        elif cmd == RemoteMeasureUnit.codes['GETATR']:
+            res['params'] = ts.GetATR()
+        elif cmd == RemoteMeasureUnit.codes['GETLOCK']:
+            res['params'] = ts.GetLock()
+        elif cmd == RemoteMeasureUnit.codes['GETATMCORR']:
+            res['params'] = ts.GetAtmCorr()
+        elif cmd == RemoteMeasureUnit.codes['GETREFCORR']:
+            res['params'] = ts.GetRefCorr()
+        elif cmd == RemoteMeasureUnit.codes['GETSTN']:
+            res['params'] = ts.GetStation()
+        elif cmd == RemoteMeasureUnit.codes['GETEDMMODE']:
+            res['params'] = ts.GetEDMMode()
+        elif cmd == RemoteMeasureUnit.codes['COORDS']:
+            res['params'] = ts.Coords(params['wait'], params['incl'])
+        elif cmd == RemoteMeasureUnit.codes['GETANGLES']:
+            res['params'] = ts.GetAngles()
+        elif cmd == RemoteMeasureUnit.codes['GETSPIRAL']:
+            res['params'] = ts.GetSpiral()
+        elif cmd == RemoteMeasureUnit.codes['SETSPIRAL']:
+            res['params'] = ts.SetSpiral(params['dRangeHz'], params['dRangeV'])
+        elif cmd == RemoteMeasureUnit.codes['INSTRNO']:
+            res['params'] = ts.GetInstrumentNo()
+        elif cmd == RemoteMeasureUnit.codes['INSTRNAME']:
+            res['params'] = ts.GetInstrumentName()
+        elif cmd == RemoteMeasureUnit.codes['INTTEMP']:
+            res['params'] = ts.GetInternalTemperature()
+        elif cmd == RemoteMeasureUnit.codes['SWITCHOFF']:
+            res['params'] = ts.SwitchOff()
+        elif cmd == RemoteMeasureUnit.codes['SWITCHON']:
+            res['params'] = ts.SwitchOn(params['mode'])
+        elif cmd == RemoteMeasureUnit.codes['SEARCHTARGET']:
+            res['params'] = ts.SearchTarget()
+        elif cmd == RemoteMeasureUnit.codes['CHANGEFACE']:
+            res['params'] = ts.ChangeFace()
+        elif cmd == RemoteMeasureUnit.codes['SETORI']:
+            res['params'] = ts.SetOri(params['ori'])
+        elif cmd == RemoteMeasureUnit.codes['SETEDMMODE']:
+            res['params'] = ts.SetEDMMode(params['mode'])
+        elif cmd == RemoteMeasureUnit.codes['SETSTN']:
+            res['params'] = ts.SetStation(params['e'], params['n'], params['z'], params['ih'])
+        elif cmd == RemoteMeasureUnit.codes['SETREFCORR']:
+            res['params'] = ts.SetRefCorr(params['status'], params['earthRadius'], params['refracticeScale'])
+        elif cmd == RemoteMeasureUnit.codes['SETATMCORR']:
+            res['params'] = ts.SetAtmCorr(params['valueOfLambda'], params['pres'], params['dry'], params['wet'])
+        elif cmd == RemoteMeasureUnit.codes['LOCKIN']:
+            res['params'] = ts.LockIn()
+        elif cmd == RemoteMeasureUnit.codes['SETLOCK']:
+            res['params'] = ts.SetLock(params['lock'])
+        elif cmd == RemoteMeasureUnit.codes['SETATR']:
+            res['params'] = ts.SetATR(params['atr'])
+        elif cmd == RemoteMeasureUnit.codes['SETPT']:
+            res['params'] = ts.SetPrismType(params['typ'])
+        elif cmd == RemoteMeasureUnit.codes['MEASURE']:
+            res['params'] = ts.Measure(params['prg'], params['incl'])
+        elif cmd == RemoteMeasureUnit.codes['GETMEASURE']:
+            res['params'] = ts.GetMeasure()
+        elif cmd == RemoteMeasureUnit.codes['MOVE']:
+            res['params'] = ts.Move(Angle(params['hz']), Angle(params['v']))
+        elif cmd == RemoteMeasureUnit.codes['GETCONTRAST']:
+            res['params'] = ts.GetContrast()
+        #elif cmd == RemoteMeasureUnit.codes['AUTOFOCUS']:
+            #res['params'] = ts.AutoFocus(params['dir'])
+        elif cmd == RemoteMeasureUnit.codes['TAKEPHOTO']:
+            file = open(params['pic'], 'w+b')
+            ts.TakePhoto(file, params['resolution'])
+            #file = res2['pic']
+            file.seek(0, os.SEEK_END)
+            #print(binaryData)
 
-        try:
-            err = 0
-            if cmd == RemoteMeasureUnit.codes['GETMEASURE']:
-                res = ts.GetMeasure(params['wait'], params['incl'])
-            elif cmd == RemoteMeasureUnit.codes['MEASUREANGDIST']:
-                res = ts.MeasureDistAngMsg(params['prg'])
-            elif cmd == RemoteMeasureUnit.codes['GETPC']:
-                res = ts.GetPc(params['prg'])
-            elif cmd == RemoteMeasureUnit.codes['GETPT']:
-                res = ts.GetPrismType()
-            elif cmd == RemoteMeasureUnit.codes['GETATR']:
-                res = ts.GetATR()
-            elif cmd == RemoteMeasureUnit.codes['GETLOCK']:
-                res = ts.GetLock()
-            elif cmd == RemoteMeasureUnit.codes['GETATMCORR']:
-                res = ts.GetAtmCorr()
-            elif cmd == RemoteMeasureUnit.codes['GETREFCORR']:
-                res = ts.GetRefCorr()
-            elif cmd == RemoteMeasureUnit.codes['GETSTN']:
-                res = ts.GetStation()
-            elif cmd == RemoteMeasureUnit.codes['GETEDMMODE']:
-                res = ts.GetEDMMode()
-            elif cmd == RemoteMeasureUnit.codes['COORDS']:
-                res = ts.Coords(params['wait'], params['incl'])
-            elif cmd == RemoteMeasureUnit.codes['GETANGLES']:
-                res = ts.GetAngles()
-            elif cmd == RemoteMeasureUnit.codes['GETSPIRAL']:
-                res = ts.GetSpiral()
-            elif cmd == RemoteMeasureUnit.codes['SETSPIRAL']:
-                res = ts.SetSpiral(params['dRangeHz'], params['dRangeV'])
-            elif cmd == RemoteMeasureUnit.codes['INSTRNO']:
-                res = ts.GetInstrumentNo()
-            elif cmd == RemoteMeasureUnit.codes['INSTRNAME']:
-                res = ts.GetInstrumentName()
-            elif cmd == RemoteMeasureUnit.codes['INTTEMP']:
-                res = ts.GetInternalTemperature()
-            elif cmd == RemoteMeasureUnit.codes['SWITCHOFF']:
-                res = ts.SwitchOff()
-            elif cmd == RemoteMeasureUnit.codes['SWITCHON']:
-                res = ts.SwitchOn(params['mode'])
-            elif cmd == RemoteMeasureUnit.codes['SEARCHTARGET']:
-                res = ts.SearchTarget()
-            elif cmd == RemoteMeasureUnit.codes['CHANGEFACE']:
-                res = ts.ChangeFace()
-            elif cmd == RemoteMeasureUnit.codes['SETORI']:
-                res = ts.SetOri(params['ori'])
-            elif cmd == RemoteMeasureUnit.codes['SETEDMMODE']:
-                res = ts.SetEDMMode(params['mode'])
-            elif cmd == RemoteMeasureUnit.codes['SETSTN']:
-                res = ts.SetStation(params['e'], params['n'], params['z'], params['ih'])
-            elif cmd == RemoteMeasureUnit.codes['SETREFCORR']:
-                res = ts.SetRefCorr(params['status'], params['earthRadius'], params['refracticeScale'])
-            elif cmd == RemoteMeasureUnit.codes['SETATMCORR']:
-                res = ts.SetAtmCorr(params['valueOfLambda'], params['pres'], params['dry'], params['wet'])
-            elif cmd == RemoteMeasureUnit.codes['LOCKIN']:
-                res = ts.LockIn()
-            elif cmd == RemoteMeasureUnit.codes['SETLOCK']:
-                res = ts.SetLock(params['lock'])
-            elif cmd == RemoteMeasureUnit.codes['SETATR']:
-                res = ts.SetATR(params['atr'])
-            elif cmd == RemoteMeasureUnit.codes['SETPT']:
-                res = ts.SetPrismType(params['typ'])
-            elif cmd == RemoteMeasureUnit.codes['MEASURE']:
-                res = ts.Measure(params['prg'], params['incl'])
-            elif cmd == RemoteMeasureUnit.codes['GETMEASURE']:
-                res = ts.GetMeasure()
-            elif cmd == RemoteMeasureUnit.codes['MOVE']:
-                res = ts.Move(Angle(params['hz']), Angle(params['v']))
-            elif cmd == RemoteMeasureUnit.codes['TRIAL']:
-                res = ts.Trial(params['param1'])
-        except:
-            err = 1
-        res['err'] = err
+            size = int(file.tell())
+            res['params'] = {'ret': 0, 'binsize': size}
 
-        for key, val in res.items():
-            res[key] = repr(val)
+        #elif cmd == RemoteMeasureUnit.codes['STARTCAMVIEW']:
+            #res['params'] = ts.StartCameraView()
+        #elif cmd == RemoteMeasureUnit.codes['STOPCAMVIEW']:
+            #res['params'] = ts.StopCameraView()
+        elif cmd == RemoteMeasureUnit.codes['TRIAL']:
+            res['params'] = ts.Trial(params['param1'])
+        print(res['params'])
+        #except:
+            #res['err'] = 1
+        print(res)
+        for key, val in res['params'].items():
+            res['params'][key] = repr(val)
 
-        return json.dumps(res).encode('ascii')
+        return json.dumps(res).encode('ascii'), file
+
+    def TakePhotoMsg(self, pic, resolution):
+
+        params = {'pic': pic.name, 'resolution': resolution}
+        msg = {'cmd': self.codes['TAKEPHOTO'], 'params': params}
+        return json.dumps(msg)
+
+    def StartCameraViewMsg(self):
+
+        params = {}
+        msg = {'cmd': self.codes['STARTCAMVIEW'], 'params': params}
+        return json.dumps(msg)
+
+    def StopCameraViewMsg(self):
+
+        params = {}
+        msg = {'cmd': self.codes['STOPCAMVIEW'], 'params': params}
+        return json.dumps(msg)
+
+    def AutoFocusMsg(dir):
+
+        params = {'dir': dir}
+        msg = {'cmd': self.codes['AUTOFOCUS'], 'params': params}
+        return json.dumps(msg)
+
+
+    def GetContrastMsg(self):
+
+        params = {}
+        msg = {'cmd': self.codes['GETCONTRAST'], 'params': params}
+        return json.dumps(msg)
+
 
     def SetPcMsg(self, pc):
         """ Set prism constant
@@ -437,7 +499,7 @@ class RemoteMeasureUnit(MeasureUnit):
                 :returns: get angles message
         """
         params = {}
-        msg = {'cmd': self.codes['GET_ANGLES'], 'params': params}
+        msg = {'cmd': self.codes['GETANGLES'], 'params': params}
         return json.dumps(msg)
 
     def ClearDistanceMsg(self):

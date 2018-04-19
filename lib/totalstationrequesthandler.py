@@ -1,53 +1,77 @@
 #import total
+import sys
+sys.path.append('../ulyxes/pyapi/')
+sys.path.append('lib/')
 from totalstation import TotalStation
+from totalstationclient import TotalStationClient
 from serialiface import SerialIface
+from leicatcra1100 import LeicaTCRA1100
 from leicatps1200 import LeicaTPS1200
 from leicameasureunit import LeicaMeasureUnit
-import socketserver
+from stationcommands import StationCommands
+from remotemeasureunit import RemoteMeasureUnit
+from picameraunit import PiCameraUnit
+from camerastation import CameraStation
+import time
+import cv2
+import numpy as np
+
+
+class CameraStationUnit(PiCameraUnit, LeicaTPS1200): pass
+
+
+
+import SocketServer
 import json
 
 #iface = SerialIface('test', '/dev/ttyUSB0')
 #ts = TotalStation('test', LeicaTPS1200(), iface)
 
-class TotalStationRequestHandler(socketserver.StreamRequestHandler):
+class TotalStationRequestHandler(SocketServer.StreamRequestHandler):
     '''TCP request handler for total stations remote controll
 
     '''
 
-    CMD_CODES = {
-    'NEW_TS': 1001,
-    'NEW_CS': 1002,
-    'MEASURE': 2001
-    }
 
     def handle(self):
-        print(self.server.stations)
-        msg = self.getRequest()
-        self.process(msg)
+
+        mu = CameraStationUnit()
+        iface = SerialIface('test', '/dev/ttyUSB0')
+
+        ts = CameraStation('test', mu, iface)
+
+        while True:
+            print('--------------')
+            msg = self.request.recv(1024)
+
+            print(msg)
+
+            ans, file = RemoteMeasureUnit.execCmd(ts, msg)
+
+            self.wfile.write(ans + b'\n')
+
+            if file != None:
+                print('???????')
 
 
-        #print("{} wrote:".format(self.client_address[0]))
-        #print(self.data.decode('ascii'))
+                file.seek(0)
+                l = 0
+                aaa = file.read(1024)
+                l += self.request.send(aaa)
+                while aaa:
+                    aaa = file.read(1024)
+                    l += self.request.send(aaa)
+
+                print('binary is sent')
+
+
     def setNewStation(self, station):
         if isinstance(station, TotalStation):
             self.server.stations.append(station)
-    def getRequest(self):
-        return json.loads(self.rfile.readline().strip().decode('ascii'))
-    def process(self, msg):
-        print(msg)
-        if msg['cmd'] == self.CMD_CODES['NEW_TS']:
-            iface = SerialIface('rs-232', '/dev/ttyUSB0', baud=19200)
-            ts = TotalStation('test', LeicaMeasureUnit(), iface)
-            self.setNewStation(ts)
-            ans = ''
-        elif msg['cmd'] == self.CMD_CODES['MEASURE']:
-            self.server.stations[0].Measure()
-            ans = ''
-        return ans
 
 
 
-    #def sendAnswer(self):
-        #pass
+
+
     #def processRequest(self):
         #pass

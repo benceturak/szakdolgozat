@@ -1,21 +1,42 @@
-from lib.camerastation import CameraStation
-from lib.gpiosteppermotorunit import GPIOStepperMotorUnit
-from lib.camera import Camera
-import picamera
-import RPi.GPIO as GPIO
+import sys
+sys.path.append('ulyxes/pyapi')
+sys.path.append('lib/')
+from camerastation import CameraStation
+from totalstation import TotalStation
+from remotemeasureunit  import RemoteMeasureUnit
+from tcpiface import TCPIface
+from serialiface import SerialIface
+from leicatps1200 import LeicaTPS1200
+from picameraunit import PiCameraUnit
+from angle import Angle
+import math
+import time
+import numpy as np
+import recognition as rec
+import cv2
 
-pins = (18, 23, 24, 25)
 
-motorUnit = GPIOStepperMotorUnit(GPIO.BCM, pins)
+mu = RemoteMeasureUnit()
+iface = TCPIface('test', ('192.168.1.102', 8081), timeout=25)
 
-camera = picamera.PiCamera()
+class CameraStationUnit(PiCameraUnit, LeicaTPS1200): pass
 
-motor = GPIOStepperMotorUnit(GPIO.BCM, pins)
+#mu = CameraStationUnit()
+#iface = SerialIface('test', '/dev/ttyUSB0')
 
-station = CameraStation(camera, motor)
+ts = CameraStation('test', mu, iface)
 
-station.startCameraView()
+#ts.Move(Angle('104-19-46', 'DMS'), Angle('89-28-53', 'DMS'))
 
-station.autoFocus()
+ts.LoadAffinParams('calibration/aparams_400_500.npy')
 
-del station
+angs = ts.FollowTarget()
+print(angs['hz'].GetAngle('DMS'))
+print(angs['v'].GetAngle('DMS'))
+print(angs)
+print('-----------------')
+
+#ts.Move(angs['hz'], angs['v'])
+
+#angs = ts.GetAbsAngles()
+#print(angs)

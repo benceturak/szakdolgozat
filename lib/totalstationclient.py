@@ -14,4 +14,5 @@ class TotalStationClient(TotalStation):
     def Trial(self, param1):
 
         msg = self.measureUnit.TrialMsg(param1)
+        print(msg)
         return self._process(msg)

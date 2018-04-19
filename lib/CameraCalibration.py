@@ -29,16 +29,30 @@ class CameraCalibration(object):
 
         for pic in self._pics:
             print('Corners searcing on: ' + pic)
-            img = cv2.imread(pic)
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            img = cv2.imread(pic, 0)
+            #print(img)
+            #gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-            ret, corners = cv2.findChessboardCorners(gray, self._patternSize)
+            binary = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
+            cv2.THRESH_BINARY,11,2)
+
+            ret, corners = cv2.findChessboardCorners(binary, self._patternSize)
+
+
+
 
             if ret == True:
                 print("Corners are found")
                 self._objpoints.append(objp)
 
-                corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
+                corners2 = cv2.cornerSubPix(binary,corners,(11,11),(-1,-1),criteria)
+
+                cv2.drawChessboardCorners(img, self._patternSize, corners,ret)
+
+                cv2.imwrite('chesspic.png', img)
+
+
+
                 self._imgpoints.append(corners2)
                 self._goodPics += 1
             else:

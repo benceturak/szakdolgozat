@@ -1,5 +1,6 @@
 ulyxes
 pyapi
+pyapi2
 
 #ftp config file
 .ftpconfig
@@ -12,9 +13,10 @@ pp.py
 ppp.py
 test.py
 ulyxes.py
-lib/recognition.py
 lib/__pycache__
 
 #images
 *.jpg
 *.png
+
+*.npy

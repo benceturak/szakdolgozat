@@ -6,14 +6,17 @@ from serialiface import SerialIface
 from camera import Camera
 from camcalibparams import CamCalibParams
 from steppermotor import StepperMotor
-from picamera import PiCamera
 from imgprocess import ImgProcess
 import numpy as np
 import os
 import cv2
+import recognition as rec
+from angle import Angle
+import math
+import time
 
 
-class CameraStation(TotalStation, Camera, StepperMotor):
+class CameraStation(TotalStation, Camera):
     '''CameraStation class for TotalStation combinated with camera
 
         :param name:
@@ -32,91 +35,117 @@ class CameraStation(TotalStation, Camera, StepperMotor):
     FOCUS_FARTHER = 2
 
     #
-    def __init__(self, name, measureUnit, measureIface, cameraUnit, stepperMotorUnit, writerUnit = None, camCalibParams = None, speed = 1, halfSteps = False, affinParams = np.empty((2,2), int), useImageCorrection = False):
+    def __init__(self, name, measureUnit, measureIface, writerUnit = None):
         '''constructor
         '''
         TotalStation.__init__(self, name, measureUnit, measureIface, writerUnit)
-        Camera.__init__(self, cameraUnit, camCalibParams)
-        StepperMotor.__init__(self, stepperMotorUnit, speed, halfSteps)
+        Camera.__init__(self, name, measureUnit, measureIface, writerUnit)
+        #StepperMotor.__init__(self, stepperMotorUnit, speed, halfSteps)
 
 
-        self._affinParams = affinParams
+        self._affinParams = None
 
-        self._useImageCorrection = useImageCorrection
+        #self._useImageCorrection = useImageCorrection
         #initialize of focus
 
-        self._contrasts = [{'pos': self._position, 'contrast': -1}]
+        #self._contrasts = [{'pos': self._position, 'contrast': -1}]
 
-
-    def getContrast(self, mask = None):
-        '''take picture and get contarst
-
-            :returns: contrast of taken picture
+    def LoadAffinParams(self, name):
+        self._affinParams = np.load(name)
+        print(self._affinParams)
+    def PicMes(self, photoName, targetType = None):
+        '''Measure angles between the target and the optical axis
+            :param photoName: name of the photo
+            :target type: type of the target
+            :params: horizontal (hz) and vertical (v) angle in dictionary
         '''
-        picName = 'focus_pics/focusPic.png'
-        self.takePhoto(picName)
-        img = cv2.imread(picName)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        mean, dev = None, None
-        if mask == None:
-            size = gray.shape
-            mask = np.zeros(gray.shape, dtype='uint8')
-            cv2.rectangle(mask, (int(size[0]/2) - 25, int(size[1]/2) - 25), (int(size[0]/2) + 25, int(size[1]/2) + 25), 255, -1)
 
-        mean, dev = cv2.meanStdDev(gray, mean, dev, mask)
-        os.remove(picName)
-        return dev[0][0]
-    def autoFocus(self, direction = FOCUS_FARTHER):
-        '''set focus on the middle of picture
+        ok = False
+        while not ok:
 
-            :param direction: start direction
-        '''
+            try:
+                print(photoName)
+                file = open(photoName, 'w+b')
+                self.TakePhoto(file, (int(self._affinParams[0,3]), int(self._affinParams[1,3])))
+
+                file.close()
+                ang = self.GetAngles()
+
+
+                img = cv2.imread(photoName, 1)
+                picCoord = rec.recogChessPattern(img)
+                print(picCoord)
+                ok = True
+            except:
+                pass
+
+        print('ok')
+
+        img[int(picCoord[1]),int(picCoord[0])] = [0,255,255]
+
+        cv2.imwrite(photoName, img)
+        angles = {}
+        angles['hz'] = Angle(1/math.sin(ang['v'].GetAngle('RAD'))*(self._affinParams[0,1]*(picCoord[0] - self._affinParams[0,0]) + self._affinParams[0,2]*(picCoord[1] - self._affinParams[1,0])))
+        angles['v'] = Angle(self._affinParams[1,1]*(picCoord[0] - self._affinParams[0,0]) + self._affinParams[1,2]*(picCoord[1] - self._affinParams[1,0]))
+
+
+        return angles
+
+    def GetAbsAngles(self, targetType = None):
+
+        t = time.localtime()
+        picName = str(t.tm_year) + '_' + str(t.tm_mon) + '_' + str(t.tm_mday) + '_' + str(t.tm_hour) + '_' + str(t.tm_min) + '_' + str(t.tm_sec) + '.png'
+
+        corr = self.PicMes(picName)
+        ang = self.GetAngles()
+
+        angles = {}
+        angles['hz'] = ang['hz'] - corr['hz']
+        angles['v'] = ang['v'] - corr['v']
+        i = 0
+
+        print('hz:', corr['hz'].GetAngle('SEC'))
+        print('v:', corr['v'].GetAngle('SEC'))
+
+        while corr['hz'].GetAngle('SEC') > 6 or corr['v'].GetAngle('SEC') > 6:
+
+
+
+            self.Move(angles['hz'], angles['v'])
+
+            corr = self.PicMes(picName)
+            ang = self.GetAngles()
+            print('hz:', corr['hz'].GetAngle('SEC'))
+            print('v:', corr['v'].GetAngle('SEC'))
+            angles = {}
+            angles['hz'] = ang['hz'] - corr['hz']
+            angles['v'] = ang['v'] - corr['v']
+            print(i)
+            i += 1
+        return angles
+
+    def FollowTarget(self):
+        t = time.localtime()
+        picName = str(t.tm_year) + '_' + str(t.tm_mon) + '_' + str(t.tm_mday) + '_' + str(t.tm_hour) + '_' + str(t.tm_min) + '_' + str(t.tm_sec) + '.png'
+
+        i = 0
+
         while True:
-            contrast = {}
-            if direction == self.FOCUS_FARTHER:
-                #print(self._contrasts[-1]['contrast'])
 
-                self.turnTo(20)
-                contrast['pos'] = self._position
-                contrast['contrast'] = self.getContrast()
-
-                #print(contrast['contrast'])
-
-                if contrast['contrast'] < self._contrasts[-1]['contrast']:
-                    direction = self.FOCUS_CLOSER
-            elif direction == self.FOCUS_CLOSER:
-                #print(self._contrasts[-1]['contrast'])
-
-                self.turnTo(-20)
-                contrast['pos'] = self._position
-                contrast['contrast'] = self.getContrast()
-
-                #print(contrast['contrast'])
-
-                if contrast['contrast'] > self._contrasts[-1]['contrast']:
-                    direction = self.FOCUS_FARTHER
-
-            self._contrasts.append(contrast)
-            #print(abs(self._contrasts[-2]['contrast'] - self._contrasts[-1]['contrast']))
-
-            if abs(self._contrasts[-2]['contrast'] - self._contrasts[-1]['contrast']) < 0.1:
-                print(abs(contrast['contrast'] - self._contrasts[-1]['contrast']))
-                #break
-    def affinCalibration(self):
-        '''determine the affin transformation parameters
-
-        '''
-
-        picNum = 0
-
-        picName = 'affin_calib/affin_calib_' + str(self._position) + '_' + str(picNum) + '.png'
-
-        while True:
-            print('Target on the marker!')
-            self.takePhoto(picName)
+            corr = self.PicMes(picName)
+            ang = self.GetAngles()
+            print('hz:', corr['hz'].GetAngle('SEC'))
+            print('v:', corr['v'].GetAngle('SEC'))
+            angles = {}
+            angles['hz'] = ang['hz'] - corr['hz']
+            angles['v'] = ang['v'] - corr['v']
+            print(i)
+            i += 1
+            if abs(corr['hz'].GetAngle('SEC')) > 6 or abs(corr['v'].GetAngle('SEC')) > 6 :
+                self.Move(angles['hz'], angles['v'])
 
 
-            answer = input("Do you want to ")
+        return angles
 
     def _picMeasure(self, numOfTargets = 1, checkPic = True,  savePic = True):
         picName = ''
@@ -146,4 +175,5 @@ class CameraStation(TotalStation, Camera, StepperMotor):
     def __del__(self):
         '''destructor
         '''
-        StepperMotor.__del__(self)
+        pass
+        #StepperMotor.__del__(self)

@@ -14,16 +14,11 @@ class PiCameraUnit(MeasureUnit):
         MeasureUnit.__init__(self, name, typ)
         self.cam = picamera.PiCamera()
 
-    def TakePhotoMsg(self, pic, file):
 
-
-        if file:
-
-            self.cam.capture(pic, file)
-            return {'ret': {}, 'pic': pic}
-        else:
-            self.cam.capture(pic)
-            return {'ret': {}}
+    def TakePhotoMsg(self, pic, resolution = (720, 480)):
+        self.cam.resolution = resolution
+        self.cam.capture(pic)
+        return {'ret': {}, 'pic': pic}
 
     def StartCameraViewMsg(self):
 
